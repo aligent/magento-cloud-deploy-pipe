@@ -1,0 +1,10 @@
+name: Aligent Magento Cloud Deploy Pipe
+image: aligent/magento-cloud-deploy-pipe
+description: This pipe is used to automatically relay commits to Magento Cloud
+repository: git@bitbucket.org:aligent/magent-cloud-deploy-pipe.git 
+maintainer: john.smith@aligent.com.au
+tags:
+    - bitbucket-pipelines
+    - pipes
+    - bash
+  
