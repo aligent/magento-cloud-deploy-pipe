@@ -1,8 +1,7 @@
-ARG PHP_VERSION
-FROM alpine/git
+FROM alpine
 
 COPY pipe /
-RUN apk add wget 
+RUN apk add wget git bash
 RUN wget -P / https://bitbucket.org/bitbucketpipelines/bitbucket-pipes-toolkit-bash/raw/0.4.0/common.sh
 
 RUN chmod a+x /*.sh
