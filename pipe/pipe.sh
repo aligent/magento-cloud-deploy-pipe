@@ -7,7 +7,7 @@ source "$(dirname "$0")/common.sh"
 validate() {
      DEBUG=${DEBUG:=false}
 
-     if [ ! -f ${SECONDARY_REMOTE} ]; then
+     if [ -z ${SECONDARY_REMOTE} ]; then
           fail "No SECONDARY_REMOTE configured."
      fi
 }
