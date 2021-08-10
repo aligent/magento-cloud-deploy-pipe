@@ -12,13 +12,13 @@ Add the following your `bitbucket-pipelines.yml` file:
           script:
             - pipe: docker://aligent/magento-cloud-deploy-pipe:latest
               variables:
-                SECONDARY_REMOTE: "user@git-remote.git"
+                MAGENTO_CLOUD_REMOTE: "user@git-remote.git"
 ```
 ## Variables
 
 | Variable              | Usage                                                       |
 | --------------------- | ----------------------------------------------------------- |
-| SECONDARY_REMOTE      | The git remote where commits will be relayed|
+| MAGENTO_CLOUD_REMOTE      | The git remote where commits will be relayed|
 | DEBUG                 | (Optional) Turn on extra debug information. Default: `false`. |
 
 ## Development
