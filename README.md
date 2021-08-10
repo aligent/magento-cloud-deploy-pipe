@@ -10,7 +10,7 @@ Add the following your `bitbucket-pipelines.yml` file:
       - step:
           name: "Git commit relay"
           script:
-            - pipe: aligent/magento-cloud-deploy-pipe:latest
+            - pipe: docker://aligent/magento-cloud-deploy-pipe:latest
               variables:
                 SECONDARY_REMOTE: "user@git-remote.git"
 ```
