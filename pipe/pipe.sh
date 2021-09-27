@@ -41,7 +41,10 @@ push_to_secondary_remote() {
      git remote add secondary-remote ${MAGENTO_CLOUD_REMOTE}
      # Fail pipeline on Magento Cloud failure (no appropriate status codes from git push)
      # and print output to bitbucket pipeline stream.
-     git push secondary-remote ${BITBUCKET_BRANCH}  2>&1 | tee /dev/stderr | grep -iq "Opening environment\|Everything up-to-date\|Deployment completed\?"
+     # Note: matching with the optional char '?' doesn't seem to work within Docker, but
+     # does locally, so we're explicitly matching the nearly identical success string as
+     # well to stop pipes from failing
+     git push secondary-remote ${BITBUCKET_BRANCH}  2>&1 | tee /dev/stderr | grep -iq "Opening environment\|Everything up-to-date\|Deployment complete\|Deployment completed"
 }
 
 validate
