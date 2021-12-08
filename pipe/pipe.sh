@@ -33,6 +33,10 @@ setup_ssh_creds() {
           debug "Appending to existing ~/.ssh/config file"
      fi
      echo "IdentityFile ~/.ssh/pipelines_id" >> ~/.ssh/config
+
+     echo "Host *" >> ~/.ssh/config
+     echo "PubkeyAcceptedKeyTypes=+ssh-rsa" >> ~/.ssh/config
+
      chmod -R go-rwx ~/.ssh/
 }
 
