@@ -51,7 +51,7 @@ push_to_secondary_remote() {
 
 mute_nr_alerts() {
      if [[ ${NR_ALERT_MUTING_RULE_ID} && ${NR_ACCOUNT_ID} && ${NR_USER_KEY} ]]; then
-          sed "s/NR_ACCOUNT_ID/${NR_ACCOUNT_ID}/g" nr-muting-rule.json.template | \
+          sed "s/NR_ACCOUNT_ID/${NR_ACCOUNT_ID}/g" /nr-muting-rule.json.template | \
           sed "s/NR_ALERT_MUTING_RULE_ID/${NR_ALERT_MUTING_RULE_ID}/g" | \
           sed "s/RULE_ENABLED/false/" > nr-muting-rule.json # Disable the rule
           curl -s https://api.newrelic.com/graphql -H 'Content-Type: application/json' \
@@ -70,7 +70,7 @@ create_nr_deploy_marker() {
 
 unmute_nr_alerts() {
      if [[ ${NR_ALERT_MUTING_RULE_ID} && ${NR_ACCOUNT_ID} && ${NR_USER_KEY} ]]; then
-          sed "s/NR_ACCOUNT_ID/${NR_ACCOUNT_ID}/g" nr-muting-rule.json.template | \
+          sed "s/NR_ACCOUNT_ID/${NR_ACCOUNT_ID}/g" /nr-muting-rule.json.template | \
           sed "s/NR_ALERT_MUTING_RULE_ID/${NR_ALERT_MUTING_RULE_ID}/g" | \
           sed "s/RULE_ENABLED/true/" > nr-muting-rule.json # Re-enable the rule
           curl -s https://api.newrelic.com/graphql -H 'Content-Type: application/json' \
