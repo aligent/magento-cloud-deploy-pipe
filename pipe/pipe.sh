@@ -48,6 +48,38 @@ push_to_secondary_remote() {
      git push secondary-remote ${BITBUCKET_BRANCH}  2>&1 | tee /dev/stderr | grep -E -i "Opening environment|Everything up-to-date|Deployment completed?|Warmed up page" > /dev/null
 }
 
+
+mute_nr_alerts() {
+     if [[ ${NR_ALERT_MUTING_RULE_ID} && ${NR_ACCOUNT_ID} && ${NR_USER_KEY} ]]; then
+          sed "s/NR_ACCOUNT_ID/${NR_ACCOUNT_ID}/g" nr-muting-rule.json.template | \
+          sed "s/NR_ALERT_MUTING_RULE_ID/${NR_ALERT_MUTING_RULE_ID}/g" | \
+          sed "s/RULE_ENABLED/false/" > nr-muting-rule.json # Disable the rule
+          curl -s https://api.newrelic.com/graphql -H 'Content-Type: application/json' \
+          -H "Api-Key: ${NR_USER_KEY}" -d @nr-muting-rule.json
+     fi
+}
+
+create_nr_deploy_marker() {
+     if [[ ${NR_APP_ID} && ${NR_USER_KEY} ]]; then
+          export COMMIT=$(git rev-parse HEAD)
+          jq '."deployment"."revision" = env.COMMIT' nr-deployment.json.template > nr-deployment.json
+          curl -s https://api.newrelic.com/v2/applications/${NR_APP_ID}/deployments.json -H "Api-Key: ${NR_USER_KEY}" -w "\n"\
+          -H "Content-Type: application/json" -d @nr-deployment.json
+     fi
+}
+
+unmute_nr_alerts() {
+     if [[ ${NR_ALERT_MUTING_RULE_ID} && ${NR_ACCOUNT_ID} && ${NR_USER_KEY} ]]; then
+          sed "s/NR_ACCOUNT_ID/${NR_ACCOUNT_ID}/g" nr-muting-rule.json.template | \
+          sed "s/NR_ALERT_MUTING_RULE_ID/${NR_ALERT_MUTING_RULE_ID}/g" | \
+          sed "s/RULE_ENABLED/true/" > nr-muting-rule.json # Re-enable the rule
+          curl -s https://api.newrelic.com/graphql -H 'Content-Type: application/json' \
+          -H "Api-Key: ${NR_USER_KEY}" -d @nr-muting-rule.json
+     fi
+}
+
 validate
 setup_ssh_creds
-push_to_secondary_remote
+mute_nr_alerts
+push_to_secondary_remote && create_nr_deploy_marker # Place a marker only when deployment was successful
+unmute_nr_alerts
