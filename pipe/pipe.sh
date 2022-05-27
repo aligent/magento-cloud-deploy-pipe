@@ -53,7 +53,7 @@ mute_nr_alerts() {
      if [[ ${NR_ALERT_MUTING_RULE_ID} && ${NR_ACCOUNT_ID} && ${NR_USER_KEY} ]]; then
           sed "s/NR_ACCOUNT_ID/${NR_ACCOUNT_ID}/g" /nr-muting-rule.json.template | \
           sed "s/NR_ALERT_MUTING_RULE_ID/${NR_ALERT_MUTING_RULE_ID}/g" | \
-          sed "s/RULE_ENABLED/false/" > nr-muting-rule.json # Disable the rule
+          sed "s/RULE_ENABLED/true/" > nr-muting-rule.json # Enable the mute rule
           curl -s https://api.newrelic.com/graphql -H 'Content-Type: application/json' \
           -H "Api-Key: ${NR_USER_KEY}" -d @nr-muting-rule.json
      fi
@@ -72,7 +72,7 @@ unmute_nr_alerts() {
      if [[ ${NR_ALERT_MUTING_RULE_ID} && ${NR_ACCOUNT_ID} && ${NR_USER_KEY} ]]; then
           sed "s/NR_ACCOUNT_ID/${NR_ACCOUNT_ID}/g" /nr-muting-rule.json.template | \
           sed "s/NR_ALERT_MUTING_RULE_ID/${NR_ALERT_MUTING_RULE_ID}/g" | \
-          sed "s/RULE_ENABLED/true/" > nr-muting-rule.json # Re-enable the rule
+          sed "s/RULE_ENABLED/false/" > nr-muting-rule.json # Disable the mute rule
           curl -s https://api.newrelic.com/graphql -H 'Content-Type: application/json' \
           -H "Api-Key: ${NR_USER_KEY}" -d @nr-muting-rule.json
      fi
@@ -81,5 +81,9 @@ unmute_nr_alerts() {
 validate
 setup_ssh_creds
 mute_nr_alerts
+
+git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
+
 push_to_secondary_remote && create_nr_deploy_marker # Place a marker only when deployment was successful
+
 unmute_nr_alerts
