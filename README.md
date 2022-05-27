@@ -19,9 +19,12 @@ Add the following your `bitbucket-pipelines.yml` file:
 | Variable              | Usage                                                       |
 | --------------------- | ----------------------------------------------------------- |
 | MAGENTO_CLOUD_REMOTE      | The git remote where commits will be relayed|
+| NR_APP_ID      | (Optional) The NewRelic App ID the deployment marker will be created in|
+| NR_USER_KEY      | (Optional) The NewRelic User Key for API Calls |
+| NR_ALERT_MUTING_RULE_ID      | (Optional) The NewRelic Alert Mute Rule ID used for suppressing alerts during deployment|
+| NR_ACCOUNT_ID      | (Optional) The NewRelic Account ID that the deployment will suppress the alerts|
 | DEBUG                 | (Optional) Turn on extra debug information. Default: `false`. |
 
 ## Development
 
-Commits published to the `main` branch  will trigger an automated build for the each of the configured PHP version.
-Commits to `staging` will do the same but image tags will be suffixed with `-experimiental`.
+Commits published to the `main` branch  will trigger an automated build for the `latest` tag in DockerHub
