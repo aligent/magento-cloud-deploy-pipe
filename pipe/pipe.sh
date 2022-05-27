@@ -42,6 +42,7 @@ setup_ssh_creds() {
 
 push_to_secondary_remote() {
      echo "Pushing to Magento Cloud"
+     git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
      git remote add secondary-remote ${MAGENTO_CLOUD_REMOTE}
      # Fail pipeline on Magento Cloud failure (no appropriate status codes from git push)
      # and print output to bitbucket pipeline stream.
@@ -55,7 +56,7 @@ mute_nr_alerts() {
           sed "s/NR_ALERT_MUTING_RULE_ID/${NR_ALERT_MUTING_RULE_ID}/g" | \
           sed "s/RULE_ENABLED/true/" > nr-muting-rule.json # Enable the mute rule
           curl -s https://api.newrelic.com/graphql -H 'Content-Type: application/json' \
-          -H "Api-Key: ${NR_USER_KEY}" -d @nr-muting-rule.json
+          -H "Api-Key: ${NR_USER_KEY}" -d @nr-muting-rule.json -w "\n"
      fi
 }
 
@@ -64,7 +65,7 @@ create_nr_deploy_marker() {
           export COMMIT=$(git rev-parse HEAD)
           jq '."deployment"."revision" = env.COMMIT' nr-deployment.json.template > nr-deployment.json
           curl -s https://api.newrelic.com/v2/applications/${NR_APP_ID}/deployments.json -H "Api-Key: ${NR_USER_KEY}" -w "\n"\
-          -H "Content-Type: application/json" -d @nr-deployment.json
+          -H "Content-Type: application/json" -d @nr-deployment.json -w "\n"
      fi
 }
 
@@ -74,16 +75,11 @@ unmute_nr_alerts() {
           sed "s/NR_ALERT_MUTING_RULE_ID/${NR_ALERT_MUTING_RULE_ID}/g" | \
           sed "s/RULE_ENABLED/false/" > nr-muting-rule.json # Disable the mute rule
           curl -s https://api.newrelic.com/graphql -H 'Content-Type: application/json' \
-          -H "Api-Key: ${NR_USER_KEY}" -d @nr-muting-rule.json
+          -H "Api-Key: ${NR_USER_KEY}" -d @nr-muting-rule.json -w "\n"
      fi
 }
 
 validate
 setup_ssh_creds
 mute_nr_alerts
-
-git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
-
-push_to_secondary_remote && create_nr_deploy_marker # Place a marker only when deployment was successful
-
-unmute_nr_alerts
+push_to_secondary_remote && (create_nr_deploy_marker; unmute_nr_alerts ) || (unmute_nr_alerts; false) # Place a marker only when deployment was successful. Otherwise return false in the end
