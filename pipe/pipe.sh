@@ -45,7 +45,7 @@ push_to_secondary_remote() {
      git remote add secondary-remote ${MAGENTO_CLOUD_REMOTE}
      # Fail pipeline on Magento Cloud failure (no appropriate status codes from git push)
      # and print output to bitbucket pipeline stream.
-     git push secondary-remote ${BITBUCKET_BRANCH}  2>&1 | tee /dev/stderr | grep -E -i "Opening environment|Everything up-to-date|Deployment completed?|Warmed up page" > /dev/null
+     git push secondary-remote ${BITBUCKET_BRANCH}  2>&1 | tee /dev/stderr | grep -qiE "Everything up-to-date|Deployment completed?|Warmed up page"
 }
 
 validate
