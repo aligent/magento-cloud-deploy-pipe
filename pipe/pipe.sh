@@ -41,14 +41,28 @@ setup_ssh_creds() {
 }
 
 push_to_secondary_remote() {
-     echo "Pushing to Magento Cloud"
-     git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
-     git remote add secondary-remote ${MAGENTO_CLOUD_REMOTE}
-     # Fail pipeline on Magento Cloud failure (no appropriate status codes from git push)
-     # and print output to bitbucket pipeline stream.
-     git push secondary-remote ${BITBUCKET_BRANCH}  2>&1 | tee /dev/stout | grep -E -i "Opening environment|Everything up-to-date|Deployment completed?|Warmed up page" > /dev/null
-}
+    echo "Pushing to Magento Cloud"
+    git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
+    git remote add secondary-remote ${MAGENTO_CLOUD_REMOTE}
+    # Fail pipeline on Magento Cloud failure (no appropriate status codes from git push)
+    # and print output to bitbucket pipeline stream.
+    OUTFILE="/tmp/git_push_output"
+    SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment")
+    FAIL_TEXT=("Deploy was failed" "Post deploy is skipped")
+    git push secondary-remote ${BITBUCKET_BRANCH}  2>&1 | tee >/dev/stout >${OUTFILE}
 
+    for text in "${FAIL_TEXT[@]}"
+    do
+        cat $OUTFILE | grep -iqE "${text}" && exit 1
+    done
+
+    for text in "${SUCCESS_TEXT[@]}"
+    do
+        cat $OUTFILE | grep -iqE "${text}" && exit 0
+    done
+
+    exit 1
+}
 
 mute_nr_alerts() {
      if [[ ${NR_ALERT_MUTING_RULE_ID} && ${NR_ACCOUNT_ID} && ${NR_USER_KEY} ]]; then
