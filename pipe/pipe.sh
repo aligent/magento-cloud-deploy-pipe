@@ -53,15 +53,15 @@ push_to_secondary_remote() {
 
     for text in "${FAIL_TEXT[@]}"
     do
-        cat $OUTFILE | grep -iqE "${text}" && exit 1
+        cat $OUTFILE | grep -iqE "${text}" && return 1
     done
 
     for text in "${SUCCESS_TEXT[@]}"
     do
-        cat $OUTFILE | grep -iqE "${text}" && exit 0
+        cat $OUTFILE | grep -iqE "${text}" && return 0
     done
 
-    exit 1
+    return 1
 }
 
 mute_nr_alerts() {
