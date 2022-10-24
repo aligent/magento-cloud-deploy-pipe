@@ -25,6 +25,15 @@ Add the following your `bitbucket-pipelines.yml` file:
 | NR_ACCOUNT_ID      | (Optional) The NewRelic Account ID that the deployment will suppress the alerts|
 | DEBUG                 | (Optional) Turn on extra debug information. Default: `false`. |
 
+* Note that you need `nr-deployment.json.template` file under the project root with the content below to enable the NR deployment marker:
+```
+{
+    "deployment": {
+        "revision": "GITSHA"
+    }
+}
+```
+
 ## Development
 
 Commits published to the `main` branch  will trigger an automated build for the `latest` tag in DockerHub
