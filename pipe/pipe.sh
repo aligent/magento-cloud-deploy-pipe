@@ -40,6 +40,27 @@ setup_ssh_creds() {
      chmod -R go-rwx ~/.ssh/
 }
 
+redeploy () {
+    echo "Previous deployment failed with a transient error. Triggering re-deployment"
+    OUTFILE="/tmp/redeploy_output"
+    SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "No change in application, re-deploying routes only")
+    FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" )
+    MC_PROJECT=$(echo ${MAGENTO_CLOUD_REMOTE} | cut -d@ -f1)
+    MAGENTO_CLOUD_CLI_TOKEN=${MAGENTO_CLOUD_CLI_TOKEN} /magento-cloud environment:redeploy --project ${MC_PROJECT} --environment ${BITBUCKET_BRANCH}
+
+    for text in "${FAIL_TEXT[@]}"
+    do
+        cat $OUTFILE | grep -iqE "${text}" && return 1
+    done
+
+    for text in "${SUCCESS_TEXT[@]}"
+    do
+        cat $OUTFILE | grep -iqE "${text}" && return 0
+    done
+
+    return 1
+}
+
 push_to_secondary_remote() {
     echo "Pushing to Magento Cloud"
     git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
@@ -49,7 +70,14 @@ push_to_secondary_remote() {
     OUTFILE="/tmp/git_push_output"
     SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "No change in application, re-deploying routes only")
     FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" )
+    RETRY_TEXT=("port 443: Connection refused")
+
     git push secondary-remote ${BITBUCKET_BRANCH} 2>&1 | tee ${OUTFILE} >/dev/stderr
+
+    for text in "${RETRY_TEXT[@]}"
+    do
+        cat $OUTFILE | grep -iqE "${text}" && [[ ${MAGENTO_CLOUD_CLI_TOKEN} ]] && redeploy # Trigger magento-cloud redeploy
+    done
 
     for text in "${FAIL_TEXT[@]}"
     do
