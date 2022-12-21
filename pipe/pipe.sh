@@ -68,9 +68,9 @@ push_to_secondary_remote() {
     # Fail pipeline on Magento Cloud failure (no appropriate status codes from git push)
     # and print output to bitbucket pipeline stream.
     OUTFILE="/tmp/git_push_output"
-    SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "No change in application, re-deploying routes only")
+    SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "re-deploying routes only")
     FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" )
-    RETRY_TEXT=("port 443: Connection refused")
+    RETRY_TEXT=("Connection refused")
 
     git push secondary-remote ${BITBUCKET_BRANCH} 2>&1 | tee ${OUTFILE} >/dev/stderr
 
