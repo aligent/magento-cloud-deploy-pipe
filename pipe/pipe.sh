@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 set -e
-
+export PATH=$PATH:
 source "$(dirname "$0")/common.sh"
 
 validate() {
@@ -46,7 +46,7 @@ redeploy () {
     SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "No change in application, re-deploying routes only")
     FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" )
     MC_PROJECT=$(echo ${MAGENTO_CLOUD_REMOTE} | cut -d@ -f1)
-    MAGENTO_CLOUD_CLI_TOKEN=${MAGENTO_CLOUD_CLI_TOKEN} /magento-cloud environment:redeploy --project ${MC_PROJECT} --environment ${BITBUCKET_BRANCH} 2>&1 | tee ${OUTFILE} >/dev/stderr
+    MAGENTO_CLOUD_CLI_TOKEN=${MAGENTO_CLOUD_CLI_TOKEN} magento-cloud environment:redeploy --project ${MC_PROJECT} --environment ${BITBUCKET_BRANCH} --yes 2>&1 | tee ${OUTFILE} >/dev/stderr
 
     for text in "${FAIL_TEXT[@]}"
     do
