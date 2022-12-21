@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 set -e
-export PATH=$PATH:
+
 source "$(dirname "$0")/common.sh"
 
 validate() {
