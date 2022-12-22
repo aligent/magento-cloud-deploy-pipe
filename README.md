@@ -23,6 +23,7 @@ Add the following your `bitbucket-pipelines.yml` file:
 | NR_USER_KEY      | (Optional) The NewRelic User Key for API Calls |
 | NR_ALERT_MUTING_RULE_ID      | (Optional) The NewRelic Alert Mute Rule ID used for suppressing alerts during deployment|
 | NR_ACCOUNT_ID      | (Optional) The NewRelic Account ID that the deployment will suppress the alerts|
+| MAGENTO_CLOUD_CLI_TOKEN      | (Optional) Magento Cloud Deploy User API token|
 | DEBUG                 | (Optional) Turn on extra debug information. Default: `false`. |
 
 * Note that you need `nr-deployment.json.template` file under the project root with the content below to enable the NR deployment marker:
