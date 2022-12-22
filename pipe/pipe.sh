@@ -2,6 +2,10 @@
 #
 set -e
 
+export SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "re-deploying routes only")
+export FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" )
+export REDEPLOY_TEXT=("Connection refused")
+
 source "$(dirname "$0")/common.sh"
 
 validate() {
@@ -43,8 +47,6 @@ setup_ssh_creds() {
 redeploy () {
     echo "Previous deployment failed with a transient error. Triggering re-deployment"
     OUTFILE="/tmp/redeploy_output"
-    SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "No change in application, re-deploying routes only")
-    FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" )
     MC_PROJECT=$(echo ${MAGENTO_CLOUD_REMOTE} | cut -d@ -f1)
     MAGENTO_CLOUD_CLI_TOKEN=${MAGENTO_CLOUD_CLI_TOKEN} magento-cloud environment:redeploy --project ${MC_PROJECT} --environment ${BITBUCKET_BRANCH} --yes 2>&1 | tee ${OUTFILE} >/dev/stderr
 
@@ -68,17 +70,8 @@ push_to_secondary_remote() {
     # Fail pipeline on Magento Cloud failure (no appropriate status codes from git push)
     # and print output to bitbucket pipeline stream.
     OUTFILE="/tmp/git_push_output"
-    SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "re-deploying routes only")
-    FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" )
-    RETRY_TEXT=("Connection refused")
 
     git push secondary-remote ${BITBUCKET_BRANCH} 2>&1 | tee ${OUTFILE} >/dev/stderr
-
-    for text in "${RETRY_TEXT[@]}"
-    do
-        cat $OUTFILE | grep -iqE "${text}" && [[ ${MAGENTO_CLOUD_CLI_TOKEN} ]] && redeploy # Trigger magento-cloud redeploy
-        return $?
-    done
 
     for text in "${FAIL_TEXT[@]}"
     do
@@ -90,7 +83,14 @@ push_to_secondary_remote() {
         cat $OUTFILE | grep -iqE "${text}" && return 0
     done
 
-    return 1
+    # Test if a redeployment is required. Use a flag file to try redeploy only once
+    REDEPLOY_FLAG=$(mktemp)
+    for text in "${REDEPLOY_TEXT[@]}"
+    do
+        cat $OUTFILE | grep -iqE "${text}" && [[ ${MAGENTO_CLOUD_CLI_TOKEN} ]] && echo "${text}" > "${REDEPLOY_FLAG}"
+    done
+    # If a redepoy is needed, the overall return value will depend on the redepoy function's return value. Otherwise, return 1
+    [[ ! -s ${REDEPLOY_FLAG} ]] && return 1 || redeploy
 }
 
 mute_nr_alerts() {
