@@ -49,7 +49,8 @@ push_to_secondary_remote() {
     OUTFILE="/tmp/git_push_output"
     SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment")
     FAIL_TEXT=("Deploy was failed" "Post deploy is skipped")
-    git push secondary-remote ${BITBUCKET_BRANCH} 2>&1 | tee ${OUTFILE} >/dev/stderr
+    BRANCH="${BITBUCKET_BRANCH}${REMOTE_BRANCH:+:$REMOTE_BRANCH}"
+    git push secondary-remote ${BRANCH} 2>&1 | tee ${OUTFILE} >/dev/stderr
 
     for text in "${FAIL_TEXT[@]}"
     do
