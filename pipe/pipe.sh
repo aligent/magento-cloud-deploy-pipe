@@ -91,8 +91,9 @@ push_to_secondary_remote() {
         if [[ -s ${REDEPLOY_FLAG} ]]; then
             redeploy
             return $?
-        else
+        elseq
             return 1
+        fi
     fi
 
     for text in "${SUCCESS_TEXT[@]}"
