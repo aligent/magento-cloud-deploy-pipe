@@ -6,6 +6,9 @@ export SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up p
 export FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" )
 export REDEPLOY_TEXT=("Connection refused")
 
+export FAIL_FLAG=$(mktemp)
+export REDEPLOY_FLAG=$(mktemp)
+
 source "$(dirname "$0")/common.sh"
 
 validate() {
@@ -75,22 +78,29 @@ push_to_secondary_remote() {
 
     for text in "${FAIL_TEXT[@]}"
     do
-        cat $OUTFILE | grep -iqE "${text}" && return 1
+        cat $OUTFILE | grep -iqE "${text}" && echo "${text}" > ${FAIL_FLAG}
     done
+
+    # Test if a redeployment is required. Use flag files to try redeploy only once
+    if [[ -s ${FAIL_FLAG} ]]; then
+        for text in "${REDEPLOY_TEXT[@]}"
+        do
+            cat $OUTFILE | grep -iqE "${text}" && [[ ${MAGENTO_CLOUD_CLI_TOKEN} ]] && echo "${text}" > "${REDEPLOY_FLAG}"
+        done
+    # If a redepoy is needed, return the redepoy function's return value. Otherwise, return 1
+        if [[ -s ${REDEPLOY_FLAG} ]]; then
+            redeploy
+            return $?
+        else
+            return 1
+    fi
 
     for text in "${SUCCESS_TEXT[@]}"
     do
         cat $OUTFILE | grep -iqE "${text}" && return 0
     done
 
-    # Test if a redeployment is required. Use a flag file to try redeploy only once
-    REDEPLOY_FLAG=$(mktemp)
-    for text in "${REDEPLOY_TEXT[@]}"
-    do
-        cat $OUTFILE | grep -iqE "${text}" && [[ ${MAGENTO_CLOUD_CLI_TOKEN} ]] && echo "${text}" > "${REDEPLOY_FLAG}"
-    done
-    # If a redepoy is needed, the overall return value will depend on the redepoy function's return value. Otherwise, return 1
-    [[ ! -s ${REDEPLOY_FLAG} ]] && return 1 || redeploy
+    return 1
 }
 
 mute_nr_alerts() {
