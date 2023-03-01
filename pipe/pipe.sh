@@ -3,7 +3,7 @@
 set -e
 
 export SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "re-deploying routes only")
-export FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" )
+export FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" "Unable to build application")
 export REDEPLOY_TEXT=("Connection refused")
 
 export FAIL_FLAG=$(mktemp)
