@@ -78,14 +78,14 @@ push_to_secondary_remote() {
 
     for text in "${FAIL_TEXT[@]}"
     do
-        cat $OUTFILE | grep -iqE "${text}" && echo "${text}" > ${FAIL_FLAG}
+        cat $OUTFILE | grep -iqE "${text}" && echo "Failed text: ${text}" | tee -a ${FAIL_FLAG}
     done
 
     # Test if a redeployment is required. Use flag files to try redeploy only once
     if [[ -s ${FAIL_FLAG} ]]; then
         for text in "${REDEPLOY_TEXT[@]}"
         do
-            cat $OUTFILE | grep -iqE "${text}" && [[ ${MAGENTO_CLOUD_CLI_TOKEN} ]] && echo "${text}" > "${REDEPLOY_FLAG}"
+            cat $OUTFILE | grep -iqE "${text}" && [[ ${MAGENTO_CLOUD_CLI_TOKEN} ]] && echo "Caught redeploy text: ${text}" | tee -a "${REDEPLOY_FLAG}"
         done
     # If a redepoy is needed, return the redepoy function's return value. Otherwise, return 1
         if [[ -s ${REDEPLOY_FLAG} ]]; then
@@ -101,6 +101,8 @@ push_to_secondary_remote() {
         cat $OUTFILE | grep -iqE "${text}" && return 0
     done
 
+    echo "Reached default failure mode"
+    cat ${FAIL_FLAG}
     return 1
 }
 
