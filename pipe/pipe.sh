@@ -77,7 +77,7 @@ mute_nr_alerts() {
 
 create_nr_deploy_marker() {
      if [[ ${NR_APP_ID} && ${NR_USER_KEY} ]]; then
-          export COMMIT=$(git rev-parse HEAD)
+          export COMMIT=MC-$(git rev-parse --short=7 HEAD)
           jq '."deployment"."revision" = env.COMMIT' nr-deployment.json.template > nr-deployment.json
           curl -s https://api.newrelic.com/v2/applications/${NR_APP_ID}/deployments.json -H "Api-Key: ${NR_USER_KEY}" -w "\n"\
           -H "Content-Type: application/json" -d @nr-deployment.json -w "\n"
