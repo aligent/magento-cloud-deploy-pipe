@@ -86,15 +86,16 @@ push_to_secondary_remote() {
         echo "FAIL_FLAG is set. Checking Redeploy condition...."
         for text in "${REDEPLOY_TEXT[@]}"
         do
-            echo "Checking ${text}"
-            cat $OUTFILE | grep -iqE "${text}" && [[ ${MAGENTO_CLOUD_CLI_TOKEN} ]] && echo "Caught redeploy text: ${text}" | tee -a "${REDEPLOY_FLAG}"
+          echo "Looking for \"${text}\" in the log..."
+          cat $OUTFILE | grep -iqE "${text}" && [[ ${MAGENTO_CLOUD_CLI_TOKEN} ]] && echo "Caught redeploy text: ${text}" | tee -a "${REDEPLOY_FLAG}"
         done
     # If a redepoy is needed, return the redepoy function's return value. Otherwise, return 1
         if [[ -s ${REDEPLOY_FLAG} ]]; then
-            redeploy
-            return $?
-        elseq
-            return 1
+          redeploy
+          return $?
+        else
+          echo "Skipping redeploy. Deploy failed."
+          return 1
         fi
     fi
 
