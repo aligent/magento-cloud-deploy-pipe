@@ -73,8 +73,8 @@ push_to_secondary_remote() {
     # Fail pipeline on Magento Cloud failure (no appropriate status codes from git push)
     # and print output to bitbucket pipeline stream.
     OUTFILE="/tmp/git_push_output"
-
-    git push secondary-remote ${BITBUCKET_BRANCH} 2>&1 | tee ${OUTFILE} >/dev/stderr
+    BRANCH="${BITBUCKET_BRANCH}${REMOTE_BRANCH:+:$REMOTE_BRANCH}"
+    git push secondary-remote ${BRANCH} 2>&1 | tee ${OUTFILE} >/dev/stderr
 
     for text in "${FAIL_TEXT[@]}"
     do
@@ -121,7 +121,7 @@ mute_nr_alerts() {
 
 create_nr_deploy_marker() {
      if [[ ${NR_APP_ID} && ${NR_USER_KEY} ]]; then
-          export COMMIT=$(git rev-parse HEAD)
+          export COMMIT=MC-$(git rev-parse --short=7 HEAD)
           jq '."deployment"."revision" = env.COMMIT' nr-deployment.json.template > nr-deployment.json
           curl -s https://api.newrelic.com/v2/applications/${NR_APP_ID}/deployments.json -H "Api-Key: ${NR_USER_KEY}" -w "\n"\
           -H "Content-Type: application/json" -d @nr-deployment.json -w "\n"
