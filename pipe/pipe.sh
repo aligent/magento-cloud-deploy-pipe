@@ -2,6 +2,13 @@
 #
 set -e
 
+export SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "re-deploying routes only")
+export FAIL_TEXT=("Deploy was failed" "Post deploy is skipped" "Unable to build application")
+export REDEPLOY_TEXT=("Connection refused")
+
+export FAIL_FLAG=$(mktemp)
+export REDEPLOY_FLAG=$(mktemp)
+
 source "$(dirname "$0")/common.sh"
 
 validate() {
@@ -40,17 +47,11 @@ setup_ssh_creds() {
      chmod -R go-rwx ~/.ssh/
 }
 
-push_to_secondary_remote() {
-    echo "Pushing to Magento Cloud"
-    git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
-    git remote add secondary-remote ${MAGENTO_CLOUD_REMOTE}
-    # Fail pipeline on Magento Cloud failure (no appropriate status codes from git push)
-    # and print output to bitbucket pipeline stream.
-    OUTFILE="/tmp/git_push_output"
-    SUCCESS_TEXT=("Everything up-to-date" "Deployment completed" "Warmed up page" "Opening environment" "No change in application, re-deploying routes only")
-    FAIL_TEXT=("Deploy was failed" "Post deploy is skipped")
-    BRANCH="${BITBUCKET_BRANCH}${REMOTE_BRANCH:+:$REMOTE_BRANCH}"
-    git push secondary-remote ${BRANCH} 2>&1 | tee ${OUTFILE} >/dev/stderr
+redeploy () {
+    echo "Previous deployment failed with a transient error. Triggering re-deployment"
+    OUTFILE="/tmp/redeploy_output"
+    MC_PROJECT=$(echo ${MAGENTO_CLOUD_REMOTE} | cut -d@ -f1)
+    MAGENTO_CLOUD_CLI_TOKEN=${MAGENTO_CLOUD_CLI_TOKEN} magento-cloud environment:redeploy --project ${MC_PROJECT} --environment ${BITBUCKET_BRANCH} --yes 2>&1 | tee ${OUTFILE} >/dev/stderr
 
     for text in "${FAIL_TEXT[@]}"
     do
@@ -62,6 +63,49 @@ push_to_secondary_remote() {
         cat $OUTFILE | grep -iqE "${text}" && return 0
     done
 
+    return 1
+}
+
+push_to_secondary_remote() {
+    echo "Pushing to Magento Cloud"
+    git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
+    git remote add secondary-remote ${MAGENTO_CLOUD_REMOTE}
+    # Fail pipeline on Magento Cloud failure (no appropriate status codes from git push)
+    # and print output to bitbucket pipeline stream.
+    OUTFILE="/tmp/git_push_output"
+    BRANCH="${BITBUCKET_BRANCH}${REMOTE_BRANCH:+:$REMOTE_BRANCH}"
+    git push secondary-remote ${BRANCH} 2>&1 | tee ${OUTFILE} >/dev/stderr
+
+    for text in "${FAIL_TEXT[@]}"
+    do
+        cat $OUTFILE | grep -iqE "${text}" && echo "Failed text: ${text}" | tee -a ${FAIL_FLAG}
+    done
+
+    # Test if a redeployment is required. Use flag files to try redeploy only once
+    if [[ -s ${FAIL_FLAG} ]]; then
+        echo "FAIL_FLAG is set. Checking Redeploy condition...."
+        for text in "${REDEPLOY_TEXT[@]}"
+        do
+          echo "Looking for \"${text}\" in the log..."
+          cat $OUTFILE | grep -iqE "${text}" && [[ ${MAGENTO_CLOUD_CLI_TOKEN} ]] && echo "Caught redeploy text: ${text}" | tee -a "${REDEPLOY_FLAG}"
+        done
+    # If a redepoy is needed, return the redepoy function's return value. Otherwise, return 1
+        if [[ -s ${REDEPLOY_FLAG} ]]; then
+          redeploy
+          return $?
+        else
+          echo "Skipping redeploy. Deploy failed."
+          return 1
+        fi
+    fi
+
+    for text in "${SUCCESS_TEXT[@]}"
+    do
+        cat $OUTFILE | grep -iqE "${text}" && return 0
+    done
+
+    echo "Reached default failure mode"
+    cat ${FAIL_FLAG}
     return 1
 }
 
