@@ -141,4 +141,9 @@ unmute_nr_alerts() {
 validate
 setup_ssh_creds
 mute_nr_alerts
-push_to_secondary_remote && (create_nr_deploy_marker; unmute_nr_alerts ) || (unmute_nr_alerts; false) # Place a marker only when deployment was successful. Otherwise return false in the end
+
+if [[ "${PIPELINE_REDEPLOY}" == "true" ]]; then
+  redeploy # Triggered by schedule-redeploy pipeline via Bitbucket Pipeline Schedules
+else
+  push_to_secondary_remote && (create_nr_deploy_marker; unmute_nr_alerts ) || (unmute_nr_alerts; false) # Place a marker only when deployment was successful. Otherwise return false in the end
+fi
