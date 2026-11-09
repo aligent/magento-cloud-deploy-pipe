@@ -37,4 +37,19 @@ Add the following your `bitbucket-pipelines.yml` file:
 
 ## Development
 
-Commits published to the `main` branch  will trigger an automated build for the `latest` tag in DockerHub
+The image is built and pushed to `aligent/magento-cloud-deploy-pipe` on Docker Hub by the [Build](.github/workflows/build.yml) GitHub Actions workflow.
+
+### Triggering a Build
+
+- **Push to `main`**: builds and pushes the `latest` tag
+- **Weekly schedule**: rebuilds `latest` from `main` without the build cache, so Alpine package and Magento Cloud CLI updates are picked up
+- **Manual**: run the workflow from the Actions tab, or with `gh workflow run build.yml`. Only runs on `main` push the image
+- **Pull request**: builds the image without pushing, to check the Dockerfile still works
+
+### Repository Configuration
+
+| Name                 | Type     | Purpose                                                                         |
+|----------------------|----------|---------------------------------------------------------------------------------|
+| `ALPINE_VERSION`     | Variable | Alpine base image version, passed as the `ALPINE_VERSION` build argument        |
+| `DOCKERHUB_USERNAME` | Variable | Docker Hub account used to push                                                 |
+| `DOCKERHUB_TOKEN`    | Secret   | Docker Hub access token with write access to `aligent/magento-cloud-deploy-pipe` |
