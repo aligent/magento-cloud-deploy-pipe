@@ -1,10 +1,37 @@
 name: Build
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: '0 15 * * 0'
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker build . --build-arg ALPINE_VERSION=${{ vars.ALPINE_VERSION }} -t magento-cloud-deploy-pipe
+    permissions:
+      contents: read
+    uses: aligent/workflows/.github/workflows/docker-build.yml@main
+    with:
+      image-name: aligent/magento-cloud-deploy-pipe
+      dockerhub-username: ${{ vars.DOCKERHUB_USERNAME }}
+      runs-on: ubuntu-latest
+      # Only main publishes; everything else is a build check.
+      push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+      tags: type=raw,value=latest
+      timeout-minutes: 10
+      # Ensure that scheduled builds always build from scratch.
+      no-cache: ${{ github.event_name == 'schedule' }}
+      build-args: |
+        ALPINE_VERSION=${{ vars.ALPINE_VERSION }}
+    secrets:
+      dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
