@@ -15,6 +15,7 @@ concurrency:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   build:
@@ -23,7 +24,6 @@ jobs:
     uses: aligent/workflows/.github/workflows/docker-build.yml@main
     with:
       image-name: aligent/magento-cloud-deploy-pipe
-      dockerhub-username: ${{ vars.DOCKERHUB_USERNAME }}
       runs-on: ubuntu-latest
       # Only main publishes; everything else is a build check.
       push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
@@ -33,5 +33,3 @@ jobs:
       no-cache: ${{ github.event_name == 'schedule' }}
       build-args: |
         ALPINE_VERSION=${{ vars.ALPINE_VERSION }}
-    secrets:
-      dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}

@@ -10,7 +10,7 @@ Add the following your `bitbucket-pipelines.yml` file:
       - step:
           name: "Git commit relay"
           script:
-            - pipe: docker://aligent/magento-cloud-deploy-pipe:latest
+            - pipe: docker://ghcr.io/aligent/magento-cloud-deploy-pipe:latest
               variables:
                 MAGENTO_CLOUD_REMOTE: "user@git-remote.git"
 ```
@@ -37,7 +37,7 @@ Add the following your `bitbucket-pipelines.yml` file:
 
 ## Development
 
-The image is built and pushed to `aligent/magento-cloud-deploy-pipe` on Docker Hub by the [Build](.github/workflows/build.yml) GitHub Actions workflow.
+The image is built and pushed to `ghcr.io/aligent/magento-cloud-deploy-pipe` on GitHub Container Registry by the [Build](.github/workflows/build.yml) GitHub Actions workflow.
 
 ### Triggering a Build
 
@@ -48,8 +48,6 @@ The image is built and pushed to `aligent/magento-cloud-deploy-pipe` on Docker H
 
 ### Repository Configuration
 
-| Name                 | Type     | Purpose                                                                         |
-|----------------------|----------|---------------------------------------------------------------------------------|
-| `ALPINE_VERSION`     | Variable | Alpine base image version, passed as the `ALPINE_VERSION` build argument        |
-| `DOCKERHUB_USERNAME` | Variable | Docker Hub account used to push                                                 |
-| `DOCKERHUB_TOKEN`    | Secret   | Docker Hub access token with write access to `aligent/magento-cloud-deploy-pipe` |
+| Name             | Type     | Purpose                                                                  |
+|------------------|----------|--------------------------------------------------------------------------|
+| `ALPINE_VERSION` | Variable | Alpine base image version, passed as the `ALPINE_VERSION` build argument |
