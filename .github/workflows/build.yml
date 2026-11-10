@@ -19,8 +19,6 @@ permissions:
 
 jobs:
   build:
-    permissions:
-      contents: read
     uses: aligent/workflows/.github/workflows/docker-build.yml@main
     with:
       image-name: aligent/magento-cloud-deploy-pipe
